@@ -329,23 +329,6 @@
             gap: 12px;
         }
 
-        /* Анимация для сообщений */
-        .fade-out {
-            animation: fadeOut 0.5s ease-out forwards;
-        }
-
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateY(-10px);
-                visibility: hidden;
-            }
-        }
-
         .notes-scroll::-webkit-scrollbar {
             width: 8px;
         }
@@ -427,56 +410,76 @@
 </div>
 
 <script>
-    // ========== ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ ДЛЯ СООБЩЕНИЙ С АВТО-ИСЧЕЗНОВЕНИЕМ ==========
-    let messageTimeout = null;
+    // ========== СИСТЕМА УПРАВЛЕНИЯ СООБЩЕНИЯМИ (ФИКС) ==========
+    let activeMessageTimeouts = {};
     
-    function showMessage(element, text, isError = false, duration = 10000) {
-        // Очищаем предыдущий таймер
-        if (messageTimeout) {
-            clearTimeout(messageTimeout);
+    function clearMessage(elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            // Плавное исчезновение
+            element.style.transition = 'opacity 0.5s ease-out';
+            element.style.opacity = '0';
+            setTimeout(() => {
+                if (element.style.opacity === '0') {
+                    element.textContent = '';
+                    element.style.opacity = '1';
+                    element.style.transition = '';
+                    element.style.color = '#8E8E93';
+                }
+            }, 500);
+        }
+        if (activeMessageTimeouts[elementId]) {
+            clearTimeout(activeMessageTimeouts[elementId]);
+            delete activeMessageTimeouts[elementId];
+        }
+    }
+    
+    function showMessage(elementId, text, isError = false, duration = 10000) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        // Очищаем предыдущий таймер для этого элемента
+        if (activeMessageTimeouts[elementId]) {
+            clearTimeout(activeMessageTimeouts[elementId]);
+            delete activeMessageTimeouts[elementId];
         }
         
-        // Убираем предыдущую анимацию
-        element.classList.remove('fade-out');
+        // Сбрасываем анимацию
+        element.style.transition = '';
+        element.style.opacity = '1';
         
         // Устанавливаем текст и цвет
         element.textContent = text;
         element.style.color = isError ? '#FF453A' : '#0A84FF';
-        element.style.opacity = '1';
-        element.style.visibility = 'visible';
         
-        // Устанавливаем таймер на исчезновение
-        messageTimeout = setTimeout(() => {
-            element.classList.add('fade-out');
-            // После анимации очищаем текст
-            setTimeout(() => {
-                if (element.classList.contains('fade-out')) {
-                    element.textContent = '';
-                    element.style.color = '#8E8E93';
-                    element.classList.remove('fade-out');
-                }
-            }, 500);
+        // Устанавливаем таймер на очистку
+        activeMessageTimeouts[elementId] = setTimeout(() => {
+            clearMessage(elementId);
         }, duration);
     }
     
-    function showStatusMessage(element, text, duration = 10000) {
-        if (messageTimeout) {
-            clearTimeout(messageTimeout);
+    function showStatusMessage(elementId, text, duration = 3000) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        // Очищаем предыдущий таймер
+        if (activeMessageTimeouts[elementId]) {
+            clearTimeout(activeMessageTimeouts[elementId]);
+            delete activeMessageTimeouts[elementId];
         }
         
-        element.classList.remove('fade-out');
+        element.style.transition = '';
+        element.style.opacity = '1';
         element.textContent = text;
         element.style.color = '#8E8E93';
-        element.style.opacity = '1';
-        element.style.visibility = 'visible';
         
-        messageTimeout = setTimeout(() => {
-            element.classList.add('fade-out');
+        activeMessageTimeouts[elementId] = setTimeout(() => {
+            clearMessage(elementId);
+            // Возвращаем стандартный текст после очистки
             setTimeout(() => {
-                if (element.classList.contains('fade-out')) {
+                if (elementId === 'editorStatusMsg' && element.textContent === '') {
                     element.textContent = '● Ничего не выбрано';
                     element.style.color = '#8E8E93';
-                    element.classList.remove('fade-out');
                 }
             }, 500);
         }, duration);
@@ -553,14 +556,12 @@
     const masterPassInput = document.getElementById('masterPassInput');
     const authLoginBtn = document.getElementById('authLoginBtn');
     const authLogoutBtn = document.getElementById('authLogoutBtn');
-    const authInfoMsg = document.getElementById('authInfoMsg');
     const notesListContainer = document.getElementById('notesListContainer');
     const createNewNoteBtn = document.getElementById('createNewNoteBtn');
     const noteTitleEditor = document.getElementById('noteTitleEditor');
     const noteBodyEditor = document.getElementById('noteBodyEditor');
     const saveCurrentNoteBtn = document.getElementById('saveCurrentNoteBtn');
     const deleteCurrentNoteBtn = document.getElementById('deleteCurrentNoteBtn');
-    const editorStatusMsg = document.getElementById('editorStatusMsg');
     const globalAuthBadge = document.getElementById('globalAuthBadge');
     const exportAllNotesBtn = document.getElementById('exportAllNotesBtn');
     const importBackupBtn = document.getElementById('importBackupBtn');
@@ -571,7 +572,7 @@
             globalAuthBadge.innerText = '🔒 Не авторизован';
             noteTitleEditor.value = '';
             noteBodyEditor.value = '';
-            editorStatusMsg.innerText = '● Заблокировано';
+            document.getElementById('editorStatusMsg').textContent = '● Заблокировано';
             currentNoteId = null;
             return;
         }
@@ -581,7 +582,7 @@
             if (!notesData.notes) notesData.notes = {};
             if (!notesData.nextId) notesData.nextId = 1;
         } catch (err) {
-            showMessage(authInfoMsg, `❌ ${err.message}`, true);
+            showMessage('authInfoMsg', `❌ ${err.message}`, true);
             notesListContainer.innerHTML = `<div style="padding:20px;color:#FF453A;">❌ Неверный пароль</div>`;
             return;
         }
@@ -596,7 +597,7 @@
             currentNoteId = null;
             noteTitleEditor.value = '';
             noteBodyEditor.value = '';
-            editorStatusMsg.innerText = '📝 Нет заметок, нажмите +';
+            document.getElementById('editorStatusMsg').textContent = '📝 Нет заметок, нажмите +';
         }
     }
 
@@ -634,18 +635,17 @@
         if (!note) return;
         noteTitleEditor.value = note.title || '';
         noteBodyEditor.value = note.body || '';
-        // Не показываем сообщение о редактировании
     }
 
     async function saveCurrentNote() {
         if (!currentUserId || !currentPassword) {
-            showMessage(authInfoMsg, '❌ Авторизуйтесь перед сохранением', true);
+            showMessage('authInfoMsg', '❌ Авторизуйтесь перед сохранением', true);
             return;
         }
         const title = noteTitleEditor.value.trim();
         const body = noteBodyEditor.value;
         if (!title && !body) {
-            showStatusMessage(editorStatusMsg, '⚠️ Нельзя сохранить пустую заметку', 3000);
+            showStatusMessage('editorStatusMsg', '⚠️ Нельзя сохранить пустую заметку', 3000);
             return;
         }
         let noteId = currentNoteId;
@@ -666,10 +666,10 @@
         currentNoteId = noteId;
         try {
             await saveEncryptedNotesCollection(currentUserId, currentPassword, { notes: notesData.notes, nextId: notesData.nextId });
-            showStatusMessage(editorStatusMsg, '✅ Сохранено и зашифровано', 3000);
+            showStatusMessage('editorStatusMsg', '✅ Сохранено и зашифровано', 3000);
             await refreshUI();
         } catch (err) {
-            showMessage(authInfoMsg, `❌ Ошибка: ${err.message}`, true);
+            showMessage('authInfoMsg', `❌ Ошибка: ${err.message}`, true);
         }
     }
 
@@ -682,28 +682,28 @@
         try {
             await saveEncryptedNotesCollection(currentUserId, currentPassword, { notes: notesData.notes, nextId: notesData.nextId });
             await refreshUI();
-            showStatusMessage(editorStatusMsg, currentNoteId ? '🗑 Заметка удалена' : '📭 Все заметки удалены', 3000);
+            showStatusMessage('editorStatusMsg', currentNoteId ? '🗑 Заметка удалена' : '📭 Все заметки удалены', 3000);
         } catch (err) {
-            showMessage(authInfoMsg, `❌ Ошибка: ${err.message}`, true);
+            showMessage('authInfoMsg', `❌ Ошибка: ${err.message}`, true);
         }
     }
 
     async function createNewNote() {
         if (!currentUserId || !currentPassword) {
-            showMessage(authInfoMsg, '❌ Сначала выполните вход', true);
+            showMessage('authInfoMsg', '❌ Сначала выполните вход', true);
             return;
         }
         currentNoteId = null;
         noteTitleEditor.value = '';
         noteBodyEditor.value = '';
-        showStatusMessage(editorStatusMsg, '✏️ Новая заметка (нажмите Сохранить)', 3000);
+        showStatusMessage('editorStatusMsg', '✏️ Новая заметка (нажмите Сохранить)', 3000);
     }
 
     async function login() {
         const userId = userIdInput.value.trim();
         const password = masterPassInput.value;
         if (!userId || !password) {
-            showMessage(authInfoMsg, '❌ Введите ID и пароль', true);
+            showMessage('authInfoMsg', '❌ Введите ID и пароль', true);
             return;
         }
         currentUserId = userId;
@@ -715,11 +715,11 @@
             if (!notesData.nextId) notesData.nextId = 1;
             await refreshUI();
             const count = Object.keys(notesData.notes).length;
-            showMessage(authInfoMsg, `✅ Доступ открыт. Заметок: ${count}`, false);
+            showMessage('authInfoMsg', `✅ Доступ открыт. Заметок: ${count}`, false);
         } catch (err) {
             currentUserId = null;
             currentPassword = null;
-            showMessage(authInfoMsg, `❌ Ошибка: ${err.message}`, true);
+            showMessage('authInfoMsg', `❌ Ошибка: ${err.message}`, true);
             refreshUI();
         }
     }
@@ -732,12 +732,12 @@
         userIdInput.value = '';
         masterPassInput.value = '';
         refreshUI();
-        showMessage(authInfoMsg, '🔓 Вы вышли из системы', false);
+        showMessage('authInfoMsg', '🔓 Вы вышли из системы', false);
     }
 
     async function exportAllBackup() {
         if (!currentUserId || !currentPassword) { 
-            showMessage(authInfoMsg, '❌ Авторизуйтесь перед экспортом', true);
+            showMessage('authInfoMsg', '❌ Авторизуйтесь перед экспортом', true);
             return; 
         }
         
@@ -759,9 +759,9 @@
             a.download = `vc_notes_${currentUserId}_${Date.now()}.backup.json`;
             a.click();
             URL.revokeObjectURL(a.href);
-            showMessage(authInfoMsg, '✅ Бэкап создан и зашифрован!', false);
+            showMessage('authInfoMsg', '✅ Бэкап создан и зашифрован!', false);
         } catch(e) { 
-            showMessage(authInfoMsg, `❌ Ошибка экспорта: ${e.message}`, true);
+            showMessage('authInfoMsg', `❌ Ошибка экспорта: ${e.message}`, true);
             console.error(e);
         }
     }
@@ -769,7 +769,7 @@
     async function importBackup(file) {
         if (!file) return;
         if (!currentUserId || !currentPassword) { 
-            showMessage(authInfoMsg, '❌ Авторизуйтесь перед импортом', true);
+            showMessage('authInfoMsg', '❌ Авторизуйтесь перед импортом', true);
             return; 
         }
         
@@ -778,12 +778,12 @@
             const imported = JSON.parse(text);
             
             if (imported.version !== "vc_notes_encrypted_v1") {
-                showMessage(authInfoMsg, '❌ Неподдерживаемый формат бэкапа', true);
+                showMessage('authInfoMsg', '❌ Неподдерживаемый формат бэкапа', true);
                 return;
             }
             
             if (imported.userId !== currentUserId) {
-                showMessage(authInfoMsg, `❌ ID не совпадает (файл: ${imported.userId}, текущий: ${currentUserId})`, true);
+                showMessage('authInfoMsg', `❌ ID не совпадает (файл: ${imported.userId}, текущий: ${currentUserId})`, true);
                 return;
             }
             
@@ -801,15 +801,15 @@
             
             await refreshUI();
             const count = Object.keys(notesData.notes).length;
-            showMessage(authInfoMsg, `✅ Импорт успешен! Загружено ${count} заметок.`, false);
-            showStatusMessage(editorStatusMsg, '📥 Бэкап восстановлен', 3000);
+            showMessage('authInfoMsg', `✅ Импорт успешен! Загружено ${count} заметок.`, false, 10000);
+            showStatusMessage('editorStatusMsg', '📥 Бэкап восстановлен', 3000);
             
         } catch(e) { 
             let errorMsg = e.message;
             if (errorMsg.includes("Неверный пароль") || errorMsg.includes("decrypt")) {
                 errorMsg = "Неверный пароль для этого бэкапа";
             }
-            showMessage(authInfoMsg, `❌ Ошибка импорта: ${errorMsg}`, true);
+            showMessage('authInfoMsg', `❌ Ошибка импорта: ${errorMsg}`, true);
         }
     }
 
