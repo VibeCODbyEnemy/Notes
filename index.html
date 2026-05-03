@@ -314,6 +314,48 @@
             color: #636366;
         }
 
+        /* Стиль для отображения ссылок в режиме просмотра (не в редакторе) */
+        .note-viewer {
+            flex: 1;
+            padding: 24px 28px;
+            overflow-y: auto;
+            color: #FFFFFF;
+            font-size: 16px;
+            line-height: 1.55;
+            display: none;
+        }
+        
+        .note-viewer a {
+            color: #FFD60A !important;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        
+        .note-viewer a:hover {
+            color: #FF9F0A !important;
+        }
+        
+        .note-viewer.active {
+            display: block;
+        }
+        
+        .editor-textarea.active {
+            display: none;
+        }
+        
+        /* Кнопка переключения режима */
+        .mode-toggle {
+            background: rgba(120, 120, 128, 0.18);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: #FFD60A;
+            font-size: 11px;
+            cursor: pointer;
+            font-family: inherit;
+            margin-left: 8px;
+        }
+
         .bottom-status {
             padding: 10px 24px;
             font-size: 11px;
@@ -393,13 +435,17 @@
 
         <div class="editor-panel">
             <div class="editor-toolbar">
-                <input type="text" id="noteTitleEditor" class="editor-title-input" placeholder="Название заметки" autocomplete="off">
+                <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                    <input type="text" id="noteTitleEditor" class="editor-title-input" placeholder="Название заметки" autocomplete="off">
+                    <button id="modeToggleBtn" class="mode-toggle" title="Переключить режим просмотра/редактирования">👁️ Режим просмотра</button>
+                </div>
                 <div class="action-group">
                     <button id="saveCurrentNoteBtn" class="icon-btn">💾 Сохранить</button>
                     <button id="deleteCurrentNoteBtn" class="icon-btn danger">🗑 Удалить</button>
                 </div>
             </div>
-            <textarea id="noteBodyEditor" class="editor-textarea" placeholder="Напишите что-нибудь... (всё шифруется AES-GCM)"></textarea>
+            <textarea id="noteBodyEditor" class="editor-textarea active" placeholder="Напишите что-нибудь... (всё шифруется AES-GCM)"></textarea>
+            <div id="noteViewer" class="note-viewer"></div>
             <div class="bottom-status">
                 <span id="editorStatusMsg">● Ничего не выбрано</span>
                 <div class="bottom-actions">
@@ -410,13 +456,12 @@
 </div>
 
 <script>
-    // ========== СИСТЕМА УПРАВЛЕНИЯ СООБЩЕНИЯМИ (ФИКС) ==========
+    // ========== СИСТЕМА УПРАВЛЕНИЯ СООБЩЕНИЯМИ ==========
     let activeMessageTimeouts = {};
     
     function clearMessage(elementId) {
         const element = document.getElementById(elementId);
         if (element) {
-            // Плавное исчезновение
             element.style.transition = 'opacity 0.5s ease-out';
             element.style.opacity = '0';
             setTimeout(() => {
@@ -438,21 +483,16 @@
         const element = document.getElementById(elementId);
         if (!element) return;
         
-        // Очищаем предыдущий таймер для этого элемента
         if (activeMessageTimeouts[elementId]) {
             clearTimeout(activeMessageTimeouts[elementId]);
             delete activeMessageTimeouts[elementId];
         }
         
-        // Сбрасываем анимацию
         element.style.transition = '';
         element.style.opacity = '1';
-        
-        // Устанавливаем текст и цвет
         element.textContent = text;
         element.style.color = isError ? '#FF453A' : '#0A84FF';
         
-        // Устанавливаем таймер на очистку
         activeMessageTimeouts[elementId] = setTimeout(() => {
             clearMessage(elementId);
         }, duration);
@@ -462,7 +502,6 @@
         const element = document.getElementById(elementId);
         if (!element) return;
         
-        // Очищаем предыдущий таймер
         if (activeMessageTimeouts[elementId]) {
             clearTimeout(activeMessageTimeouts[elementId]);
             delete activeMessageTimeouts[elementId];
@@ -475,7 +514,6 @@
         
         activeMessageTimeouts[elementId] = setTimeout(() => {
             clearMessage(elementId);
-            // Возвращаем стандартный текст после очистки
             setTimeout(() => {
                 if (elementId === 'editorStatusMsg' && element.textContent === '') {
                     element.textContent = '● Ничего не выбрано';
@@ -483,6 +521,38 @@
                 }
             }, 500);
         }, duration);
+    }
+
+    // ========== ФУНКЦИЯ ДЛЯ ПРЕОБРАЗОВАНИЯ ССЫЛОК ==========
+    function convertUrlsToLinks(text) {
+        if (!text) return '';
+        
+        // Регулярное выражение для поиска URL (http, https, ftp, www)
+        const urlRegex = /(\b(https?|ftp):\/\/[^\s<>\u4e00-\u9fff]+|www\.[^\s<>\u4e00-\u9fff]+\.[^\s<>\u4e00-\u9fff]+)/gi;
+        
+        return text.replace(urlRegex, function(url) {
+            let href = url;
+            // Добавляем https:// если ссылка начинается с www
+            if (url.startsWith('www.')) {
+                href = 'https://' + url;
+            }
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color: #FFD60A; text-decoration: underline; cursor: pointer;">${url}</a>`;
+        });
+    }
+    
+    function convertTextToHtml(text) {
+        if (!text) return '';
+        // Экранируем HTML спецсимволы, затем преобразуем ссылки
+        let escaped = text.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+        // Преобразуем переносы строк в <br>
+        escaped = escaped.replace(/\n/g, '<br>');
+        // Преобразуем ссылки
+        return convertUrlsToLinks(escaped);
     }
 
     // ========== КРИПТОГРАФИЧЕСКОЕ ЯДРО ==========
@@ -550,6 +620,7 @@
     let currentPassword = null;
     let notesData = { notes: {}, nextId: 1 };
     let currentNoteId = null;
+    let isViewMode = false; // false = режим редактирования, true = режим просмотра
 
     // DOM элементы
     const userIdInput = document.getElementById('userIdInput');
@@ -560,11 +631,42 @@
     const createNewNoteBtn = document.getElementById('createNewNoteBtn');
     const noteTitleEditor = document.getElementById('noteTitleEditor');
     const noteBodyEditor = document.getElementById('noteBodyEditor');
+    const noteViewer = document.getElementById('noteViewer');
     const saveCurrentNoteBtn = document.getElementById('saveCurrentNoteBtn');
     const deleteCurrentNoteBtn = document.getElementById('deleteCurrentNoteBtn');
     const globalAuthBadge = document.getElementById('globalAuthBadge');
     const exportAllNotesBtn = document.getElementById('exportAllNotesBtn');
     const importBackupBtn = document.getElementById('importBackupBtn');
+    const modeToggleBtn = document.getElementById('modeToggleBtn');
+
+    function toggleMode() {
+        isViewMode = !isViewMode;
+        if (isViewMode) {
+            // Переключаемся в режим просмотра
+            noteBodyEditor.classList.remove('active');
+            noteViewer.classList.add('active');
+            modeToggleBtn.textContent = '✏️ Режим редактирования';
+            // Обновляем содержимое просмотрщика
+            updateViewerContent();
+        } else {
+            // Переключаемся в режим редактирования
+            noteBodyEditor.classList.add('active');
+            noteViewer.classList.remove('active');
+            modeToggleBtn.textContent = '👁️ Режим просмотра';
+        }
+    }
+    
+    function updateViewerContent() {
+        if (currentNoteId && notesData.notes[currentNoteId]) {
+            const note = notesData.notes[currentNoteId];
+            const title = note.title || 'Без названия';
+            const body = note.body || '';
+            const htmlBody = convertTextToHtml(body);
+            noteViewer.innerHTML = `<h2 style="color: #FFFFFF; margin-bottom: 16px; font-weight: 620;">${escapeHtml(title)}</h2><div style="color: #FFFFFF; line-height: 1.55;">${htmlBody}</div>`;
+        } else {
+            noteViewer.innerHTML = '<div style="color: #8E8E93; text-align: center; padding: 40px;">Выберите заметку для просмотра</div>';
+        }
+    }
 
     async function refreshUI() {
         if (!currentUserId || !currentPassword) {
@@ -572,6 +674,7 @@
             globalAuthBadge.innerText = '🔒 Не авторизован';
             noteTitleEditor.value = '';
             noteBodyEditor.value = '';
+            noteViewer.innerHTML = '';
             document.getElementById('editorStatusMsg').textContent = '● Заблокировано';
             currentNoteId = null;
             return;
@@ -597,7 +700,11 @@
             currentNoteId = null;
             noteTitleEditor.value = '';
             noteBodyEditor.value = '';
+            noteViewer.innerHTML = '';
             document.getElementById('editorStatusMsg').textContent = '📝 Нет заметок, нажмите +';
+        }
+        if (isViewMode) {
+            updateViewerContent();
         }
     }
 
@@ -635,6 +742,9 @@
         if (!note) return;
         noteTitleEditor.value = note.title || '';
         noteBodyEditor.value = note.body || '';
+        if (isViewMode) {
+            updateViewerContent();
+        }
     }
 
     async function saveCurrentNote() {
@@ -668,6 +778,9 @@
             await saveEncryptedNotesCollection(currentUserId, currentPassword, { notes: notesData.notes, nextId: notesData.nextId });
             showStatusMessage('editorStatusMsg', '✅ Сохранено и зашифровано', 3000);
             await refreshUI();
+            if (isViewMode) {
+                updateViewerContent();
+            }
         } catch (err) {
             showMessage('authInfoMsg', `❌ Ошибка: ${err.message}`, true);
         }
@@ -683,6 +796,11 @@
             await saveEncryptedNotesCollection(currentUserId, currentPassword, { notes: notesData.notes, nextId: notesData.nextId });
             await refreshUI();
             showStatusMessage('editorStatusMsg', currentNoteId ? '🗑 Заметка удалена' : '📭 Все заметки удалены', 3000);
+            if (isViewMode && currentNoteId) {
+                updateViewerContent();
+            } else if (isViewMode && !currentNoteId) {
+                noteViewer.innerHTML = '<div style="color: #8E8E93; text-align: center; padding: 40px;">Нет заметок</div>';
+            }
         } catch (err) {
             showMessage('authInfoMsg', `❌ Ошибка: ${err.message}`, true);
         }
@@ -696,6 +814,9 @@
         currentNoteId = null;
         noteTitleEditor.value = '';
         noteBodyEditor.value = '';
+        if (isViewMode) {
+            noteViewer.innerHTML = '<div style="color: #8E8E93; text-align: center; padding: 40px;">Новая заметка (нажмите Сохранить)</div>';
+        }
         showStatusMessage('editorStatusMsg', '✏️ Новая заметка (нажмите Сохранить)', 3000);
     }
 
@@ -829,6 +950,7 @@
     saveCurrentNoteBtn.addEventListener('click', saveCurrentNote);
     deleteCurrentNoteBtn.addEventListener('click', deleteCurrentNote);
     exportAllNotesBtn.addEventListener('click', exportAllBackup);
+    modeToggleBtn.addEventListener('click', toggleMode);
     
     // Создаём input для импорта
     const importFileInput = document.createElement('input');
