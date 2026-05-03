@@ -2,35 +2,31 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>VC Notes — защищённый блокнот с шифрованием</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>VC Notes — защищённый блокнот</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
-
         body {
-            background: #000000;
-            font-family: -apple-system, 'SF Pro Text', 'SF Pro Display', 'BlinkMacSystemFont', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             height: 100vh;
             overflow: hidden;
         }
-
-        .app-container {
+        .app {
             height: 100vh;
             display: flex;
             flex-direction: column;
             background: #1C1C1E;
-            overflow: hidden;
         }
-
+        /* Верхняя панель */
         .navbar {
-            background: rgba(28, 28, 30, 0.96);
+            background: rgba(28,28,30,0.96);
             backdrop-filter: blur(20px);
-            border-bottom: 0.5px solid rgba(84, 84, 88, 0.4);
+            border-bottom: 0.5px solid rgba(84,84,88,0.4);
             padding: 10px 20px;
             display: flex;
             justify-content: space-between;
@@ -39,1030 +35,602 @@
             gap: 12px;
             flex-shrink: 0;
         }
-
-        .logo-area {
-            display: flex;
-            align-items: baseline;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .logo-area h1 {
+        .logo h1 {
             font-size: 22px;
             font-weight: 640;
-            background: linear-gradient(135deg, #FFFFFF, #8E8E93);
+            background: linear-gradient(135deg, #FFF, #8E8E93);
             background-clip: text;
             -webkit-background-clip: text;
             color: transparent;
-            letter-spacing: -0.5px;
         }
-
-        .logo-area p {
+        .logo p {
             font-size: 11px;
             color: #0A84FF;
-            font-weight: 500;
         }
-
-        .auth-compact {
+        .auth {
             display: flex;
-            align-items: center;
             gap: 10px;
-            background: rgba(120, 120, 128, 0.12);
+            background: rgba(120,120,128,0.12);
             padding: 6px 14px;
             border-radius: 32px;
             flex-wrap: wrap;
         }
-
-        .auth-compact input {
+        .auth input {
             background: #2C2C2E;
-            border: 0.5px solid rgba(84, 84, 88, 0.5);
+            border: 0.5px solid rgba(84,84,88,0.5);
             border-radius: 20px;
             padding: 8px 14px;
             font-size: 13px;
-            font-family: inherit;
-            outline: none;
+            color: #FFF;
             width: 140px;
-            transition: 0.2s;
-            color: #FFFFFF;
         }
-
-        .auth-compact input::placeholder {
-            color: #8E8E93;
-        }
-
-        .auth-compact input:focus {
-            border-color: #0A84FF;
-            box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.3);
-        }
-
-        .auth-compact button {
+        .auth input:focus { border-color: #0A84FF; outline: none; }
+        .auth button, .small-btn {
             background: #0A84FF;
             border: none;
             padding: 8px 18px;
             border-radius: 24px;
             color: white;
             font-weight: 590;
-            font-size: 13px;
             cursor: pointer;
-            transition: 0.2s;
         }
-
-        .auth-compact button.outline {
-            background: rgba(120, 120, 128, 0.18);
-            color: #FFFFFF;
+        .auth button.outline, .small-btn.outline {
+            background: rgba(120,120,128,0.18);
+            color: #FFF;
         }
-
-        .security-badge {
-            background: rgba(10, 132, 255, 0.15);
+        .badge {
+            background: rgba(10,132,255,0.15);
             padding: 6px 14px;
             border-radius: 24px;
             font-size: 12px;
-            font-weight: 500;
             color: #0A84FF;
-            white-space: nowrap;
         }
-
-        .backup-buttons {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .small-link {
-            background: rgba(120, 120, 128, 0.18);
-            border: none;
-            padding: 6px 14px;
-            border-radius: 24px;
-            color: #FFFFFF;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
-            font-family: inherit;
-        }
-
-        .small-link:hover {
-            background: rgba(120, 120, 128, 0.3);
-        }
-
-        .main-split {
+        /* Основная область */
+        .main {
             display: flex;
             flex: 1;
             overflow: hidden;
             gap: 1px;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0,0,0,0.3);
         }
-
+        /* Список заметок */
         .sidebar {
             width: 300px;
-            background: rgba(28, 28, 30, 0.92);
+            background: rgba(28,28,30,0.92);
             backdrop-filter: blur(20px);
-            border-right: 0.5px solid rgba(84, 84, 88, 0.3);
+            border-right: 0.5px solid rgba(84,84,88,0.3);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            flex-shrink: 0;
         }
-
         .sidebar-header {
-            padding: 16px 16px 8px;
-            border-bottom: 0.5px solid rgba(84, 84, 88, 0.3);
+            padding: 16px;
+            border-bottom: 0.5px solid rgba(84,84,88,0.3);
         }
-
-        .notes-list-header {
+        .notes-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 12px 16px;
-            background: rgba(28, 28, 30, 0.5);
         }
-
-        .notes-list-header h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: #FFFFFF;
-        }
-
-        .new-note-btn {
+        .notes-header h3 { color: #FFF; font-size: 16px; }
+        .new-btn {
             background: #0A84FF;
-            border: none;
             width: 32px;
             height: 32px;
             border-radius: 30px;
-            color: white;
-            font-size: 22px;
-            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: 0.2s;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            font-size: 22px;
+            cursor: pointer;
         }
-
-        .notes-scroll {
+        .notes-list {
             flex: 1;
             overflow-y: auto;
             padding: 8px 12px;
         }
-
         .note-item {
             background: #2C2C2E;
             border-radius: 14px;
             padding: 14px;
             margin-bottom: 10px;
             cursor: pointer;
-            transition: all 0.2s;
-            border: 0.5px solid rgba(84, 84, 88, 0.3);
+            border: 0.5px solid rgba(84,84,88,0.3);
         }
-
-        .note-item:hover {
-            background: #3A3A3C;
-            transform: translateX(2px);
-        }
-
         .note-item.active {
             background: #3A3A3C;
             border-left: 4px solid #0A84FF;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.4);
         }
-
-        .note-title-preview {
+        .note-title {
             font-weight: 590;
-            font-size: 15px;
+            color: #FFF;
             margin-bottom: 6px;
-            color: #FFFFFF;
         }
-
         .note-date {
             font-size: 10px;
             color: #8E8E93;
         }
-
-        .editor-panel {
+        /* Редактор */
+        .editor {
             flex: 1;
             display: flex;
             flex-direction: column;
             background: #1C1C1E;
             overflow: hidden;
         }
-
-        /* Окно эмодзи */
-        .emoji-picker {
-            position: absolute;
-            background: #2C2C2E;
-            border-radius: 20px;
-            padding: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-            border: 0.5px solid rgba(84,84,88,0.5);
-            z-index: 1000;
-            display: none;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 8px;
-            max-width: 360px;
-            backdrop-filter: blur(20px);
-        }
-
-        .emoji-picker.show {
-            display: grid;
-        }
-
-        .emoji-item {
-            font-size: 28px;
-            cursor: pointer;
-            padding: 8px;
-            text-align: center;
-            border-radius: 12px;
-            transition: 0.1s;
-        }
-
-        .emoji-item:hover {
-            background: rgba(255,255,255,0.1);
-            transform: scale(1.1);
-        }
-
         .editor-toolbar {
-            padding: 12px 24px 8px;
+            padding: 12px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
             gap: 12px;
-            border-bottom: 0.5px solid rgba(84, 84, 88, 0.3);
-            background: rgba(28, 28, 30, 0.8);
+            border-bottom: 0.5px solid rgba(84,84,88,0.3);
         }
-
-        .editor-title-input {
+        .title-input {
             font-size: 24px;
             font-weight: 620;
             background: transparent;
             border: none;
-            padding: 8px 0;
-            font-family: inherit;
-            outline: none;
+            color: #FFF;
             flex: 1;
-            min-width: 180px;
-            color: #FFFFFF;
+            outline: none;
         }
-
-        .editor-title-input::placeholder {
-            color: #636366;
-        }
-
-        .action-group {
+        .action-buttons {
             display: flex;
             gap: 10px;
         }
-
         .icon-btn {
-            background: rgba(120, 120, 128, 0.18);
+            background: rgba(120,120,128,0.18);
             border: none;
             padding: 8px 18px;
             border-radius: 30px;
-            font-weight: 500;
-            font-size: 13px;
+            color: #FFF;
             cursor: pointer;
-            transition: 0.2s;
-            font-family: inherit;
-            color: #FFFFFF;
         }
-
+        .icon-btn.emoji {
+            background: rgba(255,214,10,0.2);
+            color: #FFD60A;
+        }
         .icon-btn.danger {
-            background: rgba(255, 69, 58, 0.2);
+            background: rgba(255,69,58,0.2);
             color: #FF453A;
         }
-
         .content-container {
             flex: 1;
             position: relative;
             overflow: hidden;
         }
-
-        .editor-textarea {
+        textarea, .viewer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             padding: 20px 24px;
+            font-size: 16px;
+            line-height: 1.55;
+            background: transparent;
             border: none;
             outline: none;
-            background: transparent;
-            font-size: 16px;
-            line-height: 1.55;
-            font-family: inherit;
-            resize: none;
-            color: #FFFFFF;
+            color: #FFF;
             overflow-y: auto;
         }
-
-        .editor-textarea::placeholder {
-            color: #636366;
-        }
-
-        .note-viewer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            padding: 20px 24px;
-            overflow-y: auto;
-            color: #FFFFFF;
-            font-size: 16px;
-            line-height: 1.55;
+        .viewer {
             background: #1C1C1E;
         }
-        
-        .note-viewer a {
+        .viewer a {
             color: #FFD60A !important;
             text-decoration: underline;
-            cursor: pointer;
         }
-        
-        .note-viewer a:hover {
-            color: #FF9F0A !important;
-        }
-
-        .mode-toggle {
-            background: rgba(120, 120, 128, 0.18);
-            border: none;
-            padding: 6px 12px;
-            border-radius: 20px;
-            color: #FFD60A;
-            font-size: 11px;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
         .bottom-status {
             padding: 10px 24px;
             font-size: 11px;
             color: #8E8E93;
-            border-top: 0.5px solid rgba(84, 84, 88, 0.3);
-            display: flex;
-            justify-content: space-between;
-            background: rgba(28, 28, 30, 0.8);
+            border-top: 0.5px solid rgba(84,84,88,0.3);
         }
-
-        .notes-scroll::-webkit-scrollbar {
-            width: 8px;
+        /* Эмодзи-пикер */
+        .emoji-picker {
+            position: absolute;
+            background: #2C2C2E;
+            border-radius: 20px;
+            padding: 12px;
+            display: none;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            max-width: 360px;
+            z-index: 1000;
+            border: 0.5px solid rgba(84,84,88,0.5);
         }
-
-        .notes-scroll::-webkit-scrollbar-track {
-            background: #1C1C1E;
-            border-radius: 4px;
+        .emoji-picker.show { display: grid; }
+        .emoji-item {
+            font-size: 28px;
+            cursor: pointer;
+            text-align: center;
+            padding: 8px;
+            border-radius: 12px;
         }
-
-        .notes-scroll::-webkit-scrollbar-thumb {
-            background: #3A3A3C;
-            border-radius: 4px;
-        }
-
-        @media (max-width: 850px) {
-            .sidebar { width: 260px; }
-            .auth-compact input { width: 110px; }
-            .editor-title-input { font-size: 18px; }
-            .backup-buttons { order: 3; width: 100%; justify-content: center; margin-top: 8px; }
-        }
-
+        .emoji-item:hover { background: rgba(255,255,255,0.1); }
         @media (max-width: 750px) {
-            .navbar { flex-direction: column; align-items: stretch; }
-            .security-badge { text-align: center; }
-            .auth-compact { justify-content: center; }
+            .sidebar { width: 260px; }
+            .auth input { width: 110px; }
         }
     </style>
 </head>
 <body>
-<div class="app-container">
+<div class="app">
     <div class="navbar">
-        <div class="logo-area">
+        <div class="logo">
             <h1>📓 VC Notes</h1>
             <p>🔒 AES-GCM 256</p>
         </div>
-        <div class="auth-compact">
-            <input type="text" id="userIdInput" placeholder="Ваш ID" autocomplete="username" style="width:140px">
-            <input type="password" id="masterPassInput" placeholder="Пароль" autocomplete="current-password" style="width:140px">
-            <button id="authLoginBtn">Разблокировать</button>
-            <button id="authLogoutBtn" class="outline">Выйти</button>
-            <div class="backup-buttons">
-                <button id="exportAllNotesBtn" class="small-link">🔒 Экспорт</button>
-                <button id="importBackupBtn" class="small-link">📥 Импорт</button>
-            </div>
+        <div class="auth">
+            <input type="text" id="userId" placeholder="Ваш ID">
+            <input type="password" id="password" placeholder="Пароль">
+            <button id="loginBtn">Разблокировать</button>
+            <button id="logoutBtn" class="outline">Выйти</button>
+            <button id="exportBtn" class="small-btn outline">🔒 Экспорт</button>
+            <button id="importBtn" class="small-btn outline">📥 Импорт</button>
         </div>
-        <div class="security-badge" id="globalAuthBadge">🔒 Не авторизован</div>
+        <div class="badge" id="authBadge">🔒 Не авторизован</div>
     </div>
-
-    <div class="main-split">
+    <div class="main">
         <div class="sidebar">
             <div class="sidebar-header">
-                <div id="authInfoMsg" style="font-size: 11px; color:#8E8E93; text-align:center; margin-bottom: 8px; min-height: 32px;"></div>
-                <div class="notes-list-header">
+                <div id="msgArea" style="font-size:11px; text-align:center; min-height:32px;"></div>
+                <div class="notes-header">
                     <h3>Все заметки</h3>
-                    <button id="createNewNoteBtn" class="new-note-btn" title="Новая заметка">+</button>
+                    <div id="newNoteBtn" class="new-btn">+</div>
                 </div>
             </div>
-            <div class="notes-scroll" id="notesListContainer">
-                <div style="padding: 24px; text-align:center; color:#8E8E93;">🔐 Авторизуйтесь</div>
-            </div>
+            <div class="notes-list" id="notesList">🔐 Авторизуйтесь</div>
         </div>
-
-        <div class="editor-panel">
-            <!-- Убрана панель форматирования -->
-
+        <div class="editor">
             <div class="editor-toolbar">
-                <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
-                    <input type="text" id="noteTitleEditor" class="editor-title-input" placeholder="Название заметки" autocomplete="off">
-                    <button id="modeToggleBtn" class="mode-toggle" title="Переключить режим просмотра/редактирования">👁️ Режим просмотра</button>
-                </div>
-                <div class="action-group">
-                    <button id="emojiTriggerBtn" class="icon-btn" style="background: rgba(255,214,10,0.2); color: #FFD60A;">😊 Эмодзи</button>
-                    <button id="saveCurrentNoteBtn" class="icon-btn">💾 Сохранить</button>
-                    <button id="deleteCurrentNoteBtn" class="icon-btn danger">🗑 Удалить</button>
+                <input type="text" id="noteTitle" class="title-input" placeholder="Название заметки">
+                <div class="action-buttons">
+                    <button id="emojiBtn" class="icon-btn emoji">😊 Эмодзи</button>
+                    <button id="saveBtn" class="icon-btn">💾 Сохранить</button>
+                    <button id="deleteBtn" class="icon-btn danger">🗑 Удалить</button>
                 </div>
             </div>
-            
-            <!-- Окно эмодзи -->
-            <div id="emojiPicker" class="emoji-picker">
-                <div class="emoji-item">😀</div><div class="emoji-item">😃</div><div class="emoji-item">😄</div><div class="emoji-item">😁</div>
-                <div class="emoji-item">😅</div><div class="emoji-item">😂</div><div class="emoji-item">🤣</div><div class="emoji-item">😊</div>
-                <div class="emoji-item">😇</div><div class="emoji-item">🙂</div><div class="emoji-item">🙃</div><div class="emoji-item">😉</div>
-                <div class="emoji-item">😌</div><div class="emoji-item">😍</div><div class="emoji-item">🥰</div><div class="emoji-item">😘</div>
-                <div class="emoji-item">😗</div><div class="emoji-item">😙</div><div class="emoji-item">😚</div><div class="emoji-item">😋</div>
-                <div class="emoji-item">😛</div><div class="emoji-item">😝</div><div class="emoji-item">😜</div><div class="emoji-item">🤪</div>
-                <div class="emoji-item">🤨</div><div class="emoji-item">🧐</div><div class="emoji-item">🤓</div><div class="emoji-item">😎</div>
-                <div class="emoji-item">🤩</div><div class="emoji-item">🥳</div><div class="emoji-item">😏</div><div class="emoji-item">😒</div>
-                <div class="emoji-item">😞</div><div class="emoji-item">😔</div><div class="emoji-item">😟</div><div class="emoji-item">😕</div>
-                <div class="emoji-item">🙁</div><div class="emoji-item">☹️</div><div class="emoji-item">😣</div><div class="emoji-item">😖</div>
-                <div class="emoji-item">😫</div><div class="emoji-item">😩</div><div class="emoji-item">🥺</div><div class="emoji-item">😢</div>
-                <div class="emoji-item">😭</div><div class="emoji-item">😤</div><div class="emoji-item">😠</div><div class="emoji-item">😡</div>
-                <div class="emoji-item">🤬</div><div class="emoji-item">🤯</div><div class="emoji-item">😳</div><div class="emoji-item">🥵</div>
-                <div class="emoji-item">🥶</div><div class="emoji-item">😱</div><div class="emoji-item">😨</div><div class="emoji-item">😰</div>
-                <div class="emoji-item">❤️</div><div class="emoji-item">🧡</div><div class="emoji-item">💛</div><div class="emoji-item">💚</div>
-                <div class="emoji-item">💙</div><div class="emoji-item">💜</div><div class="emoji-item">🖤</div><div class="emoji-item">🤍</div>
-                <div class="emoji-item">👍</div><div class="emoji-item">👎</div><div class="emoji-item">👌</div><div class="emoji-item">✌️</div>
-                <div class="emoji-item">🤞</div><div class="emoji-item">🤟</div><div class="emoji-item">🤘</div><div class="emoji-item">👏</div>
-            </div>
-            
             <div class="content-container">
-                <textarea id="noteBodyEditor" class="editor-textarea" placeholder="Напишите что-нибудь... (всё шифруется AES-GCM)"></textarea>
-                <div id="noteViewer" class="note-viewer"></div>
+                <textarea id="noteBody" placeholder="Напишите что-нибудь... (Markdown, ссылки)"></textarea>
+                <div id="viewer" class="viewer"></div>
             </div>
-            
-            <div class="bottom-status">
-                <span id="editorStatusMsg">● Ничего не выбрано</span>
-                <div class="bottom-actions"></div>
-            </div>
+            <div class="bottom-status" id="statusMsg">● Ничего не выбрано</div>
         </div>
     </div>
+    <div id="emojiPicker" class="emoji-picker"></div>
 </div>
 
 <script>
-    // ========== СИСТЕМА УПРАВЛЕНИЯ СООБЩЕНИЯМИ ==========
-    let activeMessageTimeouts = {};
-    
-    function clearMessage(elementId) {
-        const element = document.getElementById(elementId);
-        if (element) {
-            element.style.transition = 'opacity 0.5s ease-out';
-            element.style.opacity = '0';
-            setTimeout(() => {
-                if (element.style.opacity === '0') {
-                    element.textContent = '';
-                    element.style.opacity = '1';
-                    element.style.transition = '';
-                    element.style.color = '#8E8E93';
-                }
-            }, 500);
-        }
-        if (activeMessageTimeouts[elementId]) {
-            clearTimeout(activeMessageTimeouts[elementId]);
-            delete activeMessageTimeouts[elementId];
-        }
-    }
-    
-    function showMessage(elementId, text, isError = false, duration = 10000) {
-        const element = document.getElementById(elementId);
-        if (!element) return;
-        if (activeMessageTimeouts[elementId]) {
-            clearTimeout(activeMessageTimeouts[elementId]);
-            delete activeMessageTimeouts[elementId];
-        }
-        element.style.transition = '';
-        element.style.opacity = '1';
-        element.textContent = text;
-        element.style.color = isError ? '#FF453A' : '#0A84FF';
-        activeMessageTimeouts[elementId] = setTimeout(() => {
-            clearMessage(elementId);
+    // ----- Утилиты -----
+    const msgDiv = document.getElementById('msgArea');
+    const statusSpan = document.getElementById('statusMsg');
+    let msgTimeout = null;
+    function showMsg(text, isError = false, duration = 10000) {
+        if (msgTimeout) clearTimeout(msgTimeout);
+        msgDiv.textContent = text;
+        msgDiv.style.color = isError ? '#FF453A' : '#0A84FF';
+        msgTimeout = setTimeout(() => {
+            msgDiv.style.opacity = '0';
+            setTimeout(() => { msgDiv.textContent = ''; msgDiv.style.opacity = '1'; }, 500);
         }, duration);
     }
-    
-    function showStatusMessage(elementId, text, duration = 3000) {
-        const element = document.getElementById(elementId);
-        if (!element) return;
-        if (activeMessageTimeouts[elementId]) {
-            clearTimeout(activeMessageTimeouts[elementId]);
-            delete activeMessageTimeouts[elementId];
-        }
-        element.style.transition = '';
-        element.style.opacity = '1';
-        element.textContent = text;
-        element.style.color = '#8E8E93';
-        activeMessageTimeouts[elementId] = setTimeout(() => {
-            clearMessage(elementId);
-            setTimeout(() => {
-                if (elementId === 'editorStatusMsg' && element.textContent === '') {
-                    element.textContent = '● Ничего не выбрано';
-                    element.style.color = '#8E8E93';
-                }
-            }, 500);
+    function showStatus(text, duration = 3000) {
+        if (msgTimeout) clearTimeout(msgTimeout);
+        statusSpan.textContent = text;
+        msgTimeout = setTimeout(() => {
+            statusSpan.style.opacity = '0';
+            setTimeout(() => { statusSpan.textContent = '● Ничего не выбрано'; statusSpan.style.opacity = '1'; }, 500);
         }, duration);
     }
 
-    // ========== ВСТАВКА ЭМОДЗИ ==========
-    const emojiTriggerBtn = document.getElementById('emojiTriggerBtn');
+    // ----- Криптография -----
+    async function deriveKey(pwd, salt) {
+        const enc = new TextEncoder();
+        const keyMat = await crypto.subtle.importKey('raw', enc.encode(pwd), 'PBKDF2', false, ['deriveKey']);
+        return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 210000, hash: 'SHA-256' }, keyMat,
+            { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    }
+    async function encryptData(obj, pwd) {
+        const plain = JSON.stringify(obj);
+        const enc = new TextEncoder();
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const key = await deriveKey(pwd, salt);
+        const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(plain));
+        const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+        combined.set(salt); combined.set(iv, salt.length); combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+        return btoa(String.fromCharCode(...combined));
+    }
+    async function decryptData(base64, pwd) {
+        const data = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+        const salt = data.slice(0,16), iv = data.slice(16,28), cipher = data.slice(28);
+        const key = await deriveKey(pwd, salt);
+        const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, cipher);
+        return JSON.parse(new TextDecoder().decode(dec));
+    }
+
+    // ----- Хранилище -----
+    const STORAGE_PREFIX = 'vc_notes_v4';
+    function getKey(uid) { return `${STORAGE_PREFIX}_${uid}`; }
+    async function saveCollection(uid, pwd, data) {
+        const enc = await encryptData(data, pwd);
+        localStorage.setItem(getKey(uid), enc);
+    }
+    async function loadCollection(uid, pwd) {
+        const raw = localStorage.getItem(getKey(uid));
+        if (!raw) return { notes: {}, nextId: 1 };
+        return await decryptData(raw, pwd);
+    }
+
+    // ----- Глобальное состояние -----
+    let currentUser = null, currentPass = null;
+    let notes = { notes: {}, nextId: 1 };
+    let currentId = null;
+    let isViewMode = false;   // false = редактирование, true = просмотр
+
+    // DOM элементы
+    const userIdInp = document.getElementById('userId');
+    const passInp = document.getElementById('password');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const authBadge = document.getElementById('authBadge');
+    const notesListDiv = document.getElementById('notesList');
+    const newNoteBtn = document.getElementById('newNoteBtn');
+    const titleInp = document.getElementById('noteTitle');
+    const bodyTextarea = document.getElementById('noteBody');
+    const viewerDiv = document.getElementById('viewer');
+    const saveBtn = document.getElementById('saveBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const emojiBtn = document.getElementById('emojiBtn');
     const emojiPicker = document.getElementById('emojiPicker');
-    
-    function showEmojiPicker(event) {
-        const rect = emojiTriggerBtn.getBoundingClientRect();
-        emojiPicker.style.top = rect.bottom + 5 + 'px';
-        emojiPicker.style.left = rect.left + 'px';
-        emojiPicker.classList.toggle('show');
-    }
-    
-    function insertEmoji(emoji) {
-        const textarea = document.getElementById('noteBodyEditor');
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const beforeText = textarea.value.substring(0, start);
-        const afterText = textarea.value.substring(end);
-        textarea.value = beforeText + emoji + afterText;
-        const newPos = start + emoji.length;
-        setTimeout(() => {
-            textarea.selectionStart = newPos;
-            textarea.selectionEnd = newPos;
-            textarea.focus();
-        }, 0);
-        emojiPicker.classList.remove('show');
-    }
-    
-    document.addEventListener('click', function(e) {
-        if (emojiPicker && !emojiPicker.contains(e.target) && e.target !== emojiTriggerBtn) {
-            emojiPicker.classList.remove('show');
-        }
-    });
-    
-    document.querySelectorAll('.emoji-item').forEach(item => {
-        item.addEventListener('click', () => insertEmoji(item.textContent));
-    });
 
-    // ========== ПРЕОБРАЗОВАНИЕ МАРКДАУНА В HTML (ДЛЯ ПРОСМОТРА) ==========
-    function convertMarkdownToHtml(text) {
+    // ----- Markdown -> HTML (для просмотра) -----
+    function mdToHtml(text) {
         if (!text) return '';
-        
         let html = text;
-        
-        // Заголовки
-        html = html.replace(/^### (.*$)/gm, '<h3 style="color: #FFFFFF; margin: 12px 0 8px; font-weight: 620;">$1</h3>');
-        html = html.replace(/^## (.*$)/gm, '<h2 style="color: #FFFFFF; margin: 16px 0 10px; font-weight: 640;">$1</h2>');
-        html = html.replace(/^# (.*$)/gm, '<h1 style="color: #FFFFFF; margin: 20px 0 12px; font-weight: 660; font-size: 24px;">$1</h1>');
-        
-        // Жирный, курсив, подчёркивание
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 700;">$1</strong>');
-        html = html.replace(/\*(.*?)\*/g, '<em style="font-style: italic;">$1</em>');
-        html = html.replace(/__(.*?)__/g, '<u style="text-decoration: underline;">$1</u>');
-        
-        // Экранирование HTML спецсимволов
-        html = html.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
+        // заголовки
+        html = html.replace(/^### (.*$)/gm, '<h3 style="margin:12px 0 8px; font-weight:620;">$1</h3>');
+        html = html.replace(/^## (.*$)/gm, '<h2 style="margin:16px 0 10px; font-weight:640;">$1</h2>');
+        html = html.replace(/^# (.*$)/gm, '<h1 style="margin:20px 0 12px; font-weight:660; font-size:24px;">$1</h1>');
+        // жирный, курсив, подчёркивание
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        html = html.replace(/__(.*?)__/g, '<u>$1</u>');
+        // списки
+        html = html.replace(/^- (.*$)/gm, '<li style="margin-left:20px;">$1</li>');
+        html = html.replace(/^\d+\. (.*$)/gm, '<li style="margin-left:20px; list-style-type:decimal;">$1</li>');
+        html = html.replace(/(<li.*<\/li>)+/g, '<ul style="margin:8px 0;">$&</ul>');
+        // ссылки
+        const urlRegex = /(\b(https?|ftp):\/\/[^\s<>]+|www\.[^\s<>]+\.[^\s<>]+)/gi;
+        html = html.replace(urlRegex, url => {
+            let href = url.startsWith('www.') ? 'https://'+url : url;
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color:#FFD60A;">${url}</a>`;
         });
-        
-        // Восстанавливаем теги
-        html = html.replace(/&lt;(\/?)(strong|em|u|h[1-3])&gt;/g, '<$1$2>');
-        
-        // Маркированные списки
-        let hasUl = false;
-        html = html.replace(/^- (.*$)/gm, function(match) {
-            hasUl = true;
-            return '<li style="margin-left: 20px; margin-bottom: 4px;">' + match.substring(2) + '</li>';
-        });
-        if (hasUl) {
-            html = html.replace(/(<li[^>]*>.*<\/li>)+/g, '<ul style="margin: 8px 0;">$&</ul>');
-        }
-        
-        // Нумерованные списки
-        let hasOl = false;
-        html = html.replace(/^\d+\. (.*$)/gm, function(match) {
-            hasOl = true;
-            return '<li style="margin-left: 20px; margin-bottom: 4px;">' + match.replace(/^\d+\. /, '') + '</li>';
-        });
-        if (hasOl) {
-            html = html.replace(/(<li[^>]*>.*<\/li>)+/g, '<ol style="margin: 8px 0;">$&</ol>');
-        }
-        
-        // Переносы строк
+        // переносы
         html = html.replace(/\n/g, '<br>');
-        
-        // Ссылки
-        const urlRegex = /(\b(https?|ftp):\/\/[^\s<>\u4e00-\u9fff]+|www\.[^\s<>\u4e00-\u9fff]+\.[^\s<>\u4e00-\u9fff]+)/gi;
-        html = html.replace(urlRegex, function(url) {
-            let href = url;
-            if (url.startsWith('www.')) href = 'https://' + url;
-            return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color: #FFD60A; text-decoration: underline;">${url}</a>`;
-        });
-        
         return html;
     }
 
-    // ========== КРИПТОГРАФИЧЕСКОЕ ЯДРО ==========
-    async function deriveKey(password, salt) {
-        const enc = new TextEncoder();
-        const keyMaterial = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
-        return await crypto.subtle.deriveKey(
-            { name: "PBKDF2", salt: salt, iterations: 210000, hash: "SHA-256" },
-            keyMaterial,
-            { name: "AES-GCM", length: 256 },
-            false,
-            ["encrypt", "decrypt"]
-        );
-    }
-
-    async function encryptData(plainObject, password) {
-        const plainJson = JSON.stringify(plainObject);
-        const encoder = new TextEncoder();
-        const salt = crypto.getRandomValues(new Uint8Array(16));
-        const iv = crypto.getRandomValues(new Uint8Array(12));
-        const key = await deriveKey(password, salt);
-        const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, encoder.encode(plainJson));
-        const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
-        combined.set(salt, 0);
-        combined.set(iv, salt.length);
-        combined.set(new Uint8Array(encrypted), salt.length + iv.length);
-        return btoa(String.fromCharCode(...combined));
-    }
-
-    async function decryptData(encryptedBase64, password) {
-        const combined = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
-        const salt = combined.slice(0, 16);
-        const iv = combined.slice(16, 16+12);
-        const ciphertext = combined.slice(16+12);
-        const key = await deriveKey(password, salt);
-        try {
-            const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, ciphertext);
-            const jsonStr = new TextDecoder().decode(decrypted);
-            return JSON.parse(jsonStr);
-        } catch(e) {
-            throw new Error("Неверный пароль или данные повреждены");
+    function updateViewer() {
+        if (currentId && notes.notes[currentId]) {
+            viewerDiv.innerHTML = mdToHtml(notes.notes[currentId].body || '');
+        } else {
+            viewerDiv.innerHTML = '<div style="color:#8E8E93; text-align:center; padding:40px;">Выберите заметку</div>';
         }
     }
 
-    // ========== ХРАНИЛИЩЕ ==========
-    const STORAGE_PREFIX = "vc_secure_notes_v3";
-    function getStorageKey(userId) { return `${STORAGE_PREFIX}_${userId}`; }
-    async function saveEncryptedNotesCollection(userId, password, notesCollection) {
-        const encrypted = await encryptData(notesCollection, password);
-        localStorage.setItem(getStorageKey(userId), encrypted);
-    }
-    async function loadEncryptedNotesCollection(userId, password) {
-        const raw = localStorage.getItem(getStorageKey(userId));
-        if (!raw) return { notes: {}, nextId: 1 };
-        return await decryptData(raw, password);
-    }
-
-    // ========== СОСТОЯНИЕ ==========
-    let currentUserId = null, currentPassword = null, notesData = { notes: {}, nextId: 1 }, currentNoteId = null, isViewMode = false;
-
-    // DOM элементы
-    const userIdInput = document.getElementById('userIdInput');
-    const masterPassInput = document.getElementById('masterPassInput');
-    const authLoginBtn = document.getElementById('authLoginBtn');
-    const authLogoutBtn = document.getElementById('authLogoutBtn');
-    const notesListContainer = document.getElementById('notesListContainer');
-    const createNewNoteBtn = document.getElementById('createNewNoteBtn');
-    const noteTitleEditor = document.getElementById('noteTitleEditor');
-    const noteBodyEditor = document.getElementById('noteBodyEditor');
-    const noteViewer = document.getElementById('noteViewer');
-    const saveCurrentNoteBtn = document.getElementById('saveCurrentNoteBtn');
-    const deleteCurrentNoteBtn = document.getElementById('deleteCurrentNoteBtn');
-    const globalAuthBadge = document.getElementById('globalAuthBadge');
-    const exportAllNotesBtn = document.getElementById('exportAllNotesBtn');
-    const importBackupBtn = document.getElementById('importBackupBtn');
-    const modeToggleBtn = document.getElementById('modeToggleBtn');
-
-    // ========== ОСНОВНЫЕ ФУНКЦИИ ==========
     function toggleMode() {
         isViewMode = !isViewMode;
+        const modeBtn = document.getElementById('modeToggle');
         if (isViewMode) {
-            // Включаем режим просмотра
-            noteBodyEditor.style.display = 'none';
-            noteViewer.style.display = 'block';
-            modeToggleBtn.textContent = '✏️ Режим редактирования';
-            updateViewerContent();
+            bodyTextarea.style.display = 'none';
+            viewerDiv.style.display = 'block';
+            updateViewer();
+            modeBtn.textContent = '👁️ Режим просмотра';   // текущий режим
         } else {
-            // Включаем режим редактирования
-            noteBodyEditor.style.display = 'block';
-            noteViewer.style.display = 'none';
-            modeToggleBtn.textContent = '👁️ Режим просмотра';
-        }
-    }
-    
-    function updateViewerContent() {
-        if (currentNoteId && notesData.notes[currentNoteId]) {
-            const note = notesData.notes[currentNoteId];
-            const body = note.body || '';
-            const htmlBody = convertMarkdownToHtml(body);
-            // В режиме просмотра показываем только тело заметки (заголовок уже отображается в поле ввода)
-            noteViewer.innerHTML = `<div style="color: #FFFFFF; line-height: 1.55;">${htmlBody}</div>`;
-        } else {
-            noteViewer.innerHTML = '<div style="color: #8E8E93; text-align: center; padding: 40px;">Выберите заметку для просмотра</div>';
+            bodyTextarea.style.display = 'block';
+            viewerDiv.style.display = 'none';
+            modeBtn.textContent = '✏️ Режим редактирования'; // текущий режим
         }
     }
 
-    async function refreshUI() {
-        if (!currentUserId || !currentPassword) {
-            notesListContainer.innerHTML = '<div style="padding: 24px; text-align:center; color:#8E8E93;">🔐 Введите ID и пароль, нажмите "Разблокировать"</div>';
-            globalAuthBadge.innerText = '🔒 Не авторизован';
-            noteTitleEditor.value = '';
-            noteBodyEditor.value = '';
-            noteViewer.innerHTML = '';
-            document.getElementById('editorStatusMsg').textContent = '● Заблокировано';
-            currentNoteId = null;
-            return;
-        }
-        globalAuthBadge.innerText = `🔓 Активно: ${currentUserId}`;
-        try {
-            notesData = await loadEncryptedNotesCollection(currentUserId, currentPassword);
-            if (!notesData.notes) notesData.notes = {};
-            if (!notesData.nextId) notesData.nextId = 1;
-        } catch (err) {
-            showMessage('authInfoMsg', `❌ ${err.message}`, true);
-            notesListContainer.innerHTML = `<div style="padding:20px;color:#FF453A;">❌ Неверный пароль</div>`;
-            return;
-        }
-        renderNotesList();
-        if (currentNoteId && notesData.notes[currentNoteId]) {
-            loadNoteIntoEditor(currentNoteId);
-        } else if (Object.keys(notesData.notes).length > 0) {
-            const firstId = Object.keys(notesData.notes)[0];
-            currentNoteId = firstId;
-            loadNoteIntoEditor(currentNoteId);
-        } else {
-            currentNoteId = null;
-            noteTitleEditor.value = '';
-            noteBodyEditor.value = '';
-            noteViewer.innerHTML = '';
-            document.getElementById('editorStatusMsg').textContent = '📝 Нет заметок, нажмите +';
-        }
-        if (isViewMode) updateViewerContent();
-    }
+    // Добавим кнопку переключения в тулбар
+    const modeBtn = document.createElement('button');
+    modeBtn.className = 'icon-btn';
+    modeBtn.id = 'modeToggle';
+    modeBtn.textContent = '✏️ Режим редактирования';
+    document.querySelector('.editor-toolbar .action-buttons').prepend(modeBtn);
+    modeBtn.onclick = toggleMode;
 
-    function renderNotesList() {
-        if (!notesData.notes || Object.keys(notesData.notes).length === 0) {
-            notesListContainer.innerHTML = '<div style="padding: 24px; text-align:center; color:#8E8E93;">📭 Нет заметок. Нажмите +</div>';
+    // ----- Рендер списка -----
+    function renderList() {
+        if (!currentUser) {
+            notesListDiv.innerHTML = '<div style="padding:24px; text-align:center; color:#8E8E93;">🔐 Авторизуйтесь</div>';
             return;
         }
-        const sorted = Object.entries(notesData.notes).sort((a,b) => (b[1].updatedAt || 0) - (a[1].updatedAt || 0));
-        notesListContainer.innerHTML = sorted.map(([id, note]) => {
-            const preview = note.title ? note.title.substring(0, 40) : (note.body.substring(0, 30) || "Без названия");
-            const date = note.updatedAt ? new Date(note.updatedAt).toLocaleString() : "недавно";
-            const activeClass = (currentNoteId == id) ? 'active' : '';
-            return `
-                <div class="note-item ${activeClass}" data-id="${id}">
-                    <div class="note-title-preview">${escapeHtml(preview)}</div>
-                    <div class="note-date">${escapeHtml(date)}</div>
-                </div>
-            `;
-        }).join('');
+        const items = Object.entries(notes.notes).sort((a,b) => (b[1].updatedAt||0) - (a[1].updatedAt||0));
+        if (items.length === 0) {
+            notesListDiv.innerHTML = '<div style="padding:24px; text-align:center; color:#8E8E93;">📭 Нет заметок. Нажмите +</div>';
+            return;
+        }
+        notesListDiv.innerHTML = items.map(([id, note]) => `
+            <div class="note-item ${currentId == id ? 'active' : ''}" data-id="${id}">
+                <div class="note-title">${escapeHtml(note.title || 'Без названия').substring(0,40)}</div>
+                <div class="note-date">${note.updatedAt ? new Date(note.updatedAt).toLocaleString() : 'недавно'}</div>
+            </div>
+        `).join('');
         document.querySelectorAll('.note-item').forEach(el => {
-            el.addEventListener('click', (e) => {
-                const id = el.getAttribute('data-id');
-                if (id && notesData.notes[id]) {
-                    currentNoteId = id;
-                    loadNoteIntoEditor(currentNoteId);
-                    renderNotesList();
-                }
+            el.addEventListener('click', () => {
+                currentId = el.dataset.id;
+                loadNoteToEditor(currentId);
+                renderList();
             });
         });
     }
 
-    function loadNoteIntoEditor(id) {
-        const note = notesData.notes[id];
+    function loadNoteToEditor(id) {
+        const note = notes.notes[id];
         if (!note) return;
-        noteTitleEditor.value = note.title || '';
-        noteBodyEditor.value = note.body || '';
-        if (isViewMode) updateViewerContent();
+        titleInp.value = note.title || '';
+        bodyTextarea.value = note.body || '';
+        if (isViewMode) updateViewer();
     }
 
-    async function saveCurrentNote() {
-        if (!currentUserId || !currentPassword) {
-            showMessage('authInfoMsg', '❌ Авторизуйтесь перед сохранением', true);
-            return;
-        }
-        const title = noteTitleEditor.value.trim();
-        const body = noteBodyEditor.value;
-        if (!title && !body) {
-            showStatusMessage('editorStatusMsg', '⚠️ Нельзя сохранить пустую заметку', 3000);
-            return;
-        }
-        let noteId = currentNoteId;
-        if (!noteId || !notesData.notes[noteId]) {
-            noteId = String(notesData.nextId || 1);
-            notesData.nextId = parseInt(noteId) + 1;
-            notesData.notes[noteId] = {
-                title: title || "Новая заметка",
-                body: body,
-                createdAt: Date.now(),
-                updatedAt: Date.now()
-            };
+    async function saveCurrent() {
+        if (!currentUser) { showMsg('Авторизуйтесь', true); return; }
+        const title = titleInp.value.trim();
+        const body = bodyTextarea.value;
+        if (!title && !body) { showStatus('⚠️ Пустая заметка', 3000); return; }
+        let id = currentId;
+        if (!id || !notes.notes[id]) {
+            id = String(notes.nextId++);
+            notes.notes[id] = { title: title || 'Новая заметка', body, createdAt: Date.now(), updatedAt: Date.now() };
         } else {
-            notesData.notes[noteId].title = title || "Без названия";
-            notesData.notes[noteId].body = body;
-            notesData.notes[noteId].updatedAt = Date.now();
+            notes.notes[id].title = title || 'Без названия';
+            notes.notes[id].body = body;
+            notes.notes[id].updatedAt = Date.now();
         }
-        currentNoteId = noteId;
-        try {
-            await saveEncryptedNotesCollection(currentUserId, currentPassword, { notes: notesData.notes, nextId: notesData.nextId });
-            showStatusMessage('editorStatusMsg', '✅ Сохранено и зашифровано', 3000);
-            await refreshUI();
-            if (isViewMode) updateViewerContent();
-        } catch (err) {
-            showMessage('authInfoMsg', `❌ Ошибка: ${err.message}`, true);
-        }
+        currentId = id;
+        await saveCollection(currentUser, currentPass, { notes: notes.notes, nextId: notes.nextId });
+        showStatus('✅ Сохранено', 2000);
+        renderList();
+        if (isViewMode) updateViewer();
     }
 
-    async function deleteCurrentNote() {
-        if (!currentNoteId || !notesData.notes[currentNoteId]) return;
-        if (!confirm('Удалить заметку безвозвратно?')) return;
-        delete notesData.notes[currentNoteId];
-        const remainingIds = Object.keys(notesData.notes);
-        currentNoteId = remainingIds.length > 0 ? remainingIds[0] : null;
-        try {
-            await saveEncryptedNotesCollection(currentUserId, currentPassword, { notes: notesData.notes, nextId: notesData.nextId });
-            await refreshUI();
-            showStatusMessage('editorStatusMsg', currentNoteId ? '🗑 Заметка удалена' : '📭 Все заметки удалены', 3000);
-            if (isViewMode && currentNoteId) {
-                updateViewerContent();
-            } else if (isViewMode && !currentNoteId) {
-                noteViewer.innerHTML = '<div style="color: #8E8E93; text-align: center; padding: 40px;">Нет заметок</div>';
-            }
-        } catch (err) {
-            showMessage('authInfoMsg', `❌ Ошибка: ${err.message}`, true);
-        }
+    async function deleteCurrent() {
+        if (!currentId || !notes.notes[currentId]) return;
+        if (!confirm('Удалить заметку?')) return;
+        delete notes.notes[currentId];
+        const ids = Object.keys(notes.notes);
+        currentId = ids.length ? ids[0] : null;
+        await saveCollection(currentUser, currentPass, { notes: notes.notes, nextId: notes.nextId });
+        if (currentId) loadNoteToEditor(currentId);
+        else { titleInp.value = ''; bodyTextarea.value = ''; viewerDiv.innerHTML = ''; }
+        renderList();
+        showStatus('🗑 Удалено', 2000);
     }
 
-    async function createNewNote() {
-        if (!currentUserId || !currentPassword) {
-            showMessage('authInfoMsg', '❌ Сначала выполните вход', true);
-            return;
-        }
-        currentNoteId = null;
-        noteTitleEditor.value = '';
-        noteBodyEditor.value = '';
-        if (isViewMode) {
-            noteViewer.innerHTML = '<div style="color: #8E8E93; text-align: center; padding: 40px;">Новая заметка (нажмите Сохранить)</div>';
-        }
-        showStatusMessage('editorStatusMsg', '✏️ Новая заметка (нажмите Сохранить)', 3000);
+    async function newNote() {
+        if (!currentUser) { showMsg('Авторизуйтесь', true); return; }
+        currentId = null;
+        titleInp.value = '';
+        bodyTextarea.value = '';
+        if (isViewMode) viewerDiv.innerHTML = '<div style="color:#8E8E93; text-align:center; padding:40px;">Новая заметка</div>';
+        showStatus('✏️ Новая заметка', 2000);
     }
 
+    // ----- Эмодзи -----
+    const emojis = ['😀','😃','😄','😁','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','❤️','🧡','💛','💚','💙','💜','🖤','🤍','👍','👎','👌','✌️','🤞','🤟','🤘','👏'];
+    emojiPicker.innerHTML = emojis.map(e => `<div class="emoji-item">${e}</div>`).join('');
+    function showPicker(e) {
+        const rect = emojiBtn.getBoundingClientRect();
+        emojiPicker.style.top = rect.bottom + 5 + 'px';
+        emojiPicker.style.left = rect.left + 'px';
+        emojiPicker.classList.toggle('show');
+    }
+    function insertEmoji(emoji) {
+        const start = bodyTextarea.selectionStart, end = bodyTextarea.selectionEnd;
+        bodyTextarea.value = bodyTextarea.value.slice(0,start) + emoji + bodyTextarea.value.slice(end);
+        bodyTextarea.selectionStart = bodyTextarea.selectionEnd = start + emoji.length;
+        bodyTextarea.focus();
+        emojiPicker.classList.remove('show');
+    }
+    document.querySelectorAll('.emoji-item').forEach(el => el.addEventListener('click', () => insertEmoji(el.textContent)));
+    document.addEventListener('click', e => { if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) emojiPicker.classList.remove('show'); });
+
+    // ----- Авторизация, экспорт, импорт -----
     async function login() {
-        const userId = userIdInput.value.trim();
-        const password = masterPassInput.value;
-        if (!userId || !password) {
-            showMessage('authInfoMsg', '❌ Введите ID и пароль', true);
-            return;
-        }
-        currentUserId = userId;
-        currentPassword = password;
+        const uid = userIdInp.value.trim(), pwd = passInp.value;
+        if (!uid || !pwd) { showMsg('Введите ID и пароль', true); return; }
         try {
-            const test = await loadEncryptedNotesCollection(userId, password);
-            notesData = test;
-            if (!notesData.notes) notesData.notes = {};
-            if (!notesData.nextId) notesData.nextId = 1;
-            await refreshUI();
-            const count = Object.keys(notesData.notes).length;
-            showMessage('authInfoMsg', `✅ Доступ открыт. Заметок: ${count}`, false);
-        } catch (err) {
-            currentUserId = null;
-            currentPassword = null;
-            showMessage('authInfoMsg', `❌ Ошибка: ${err.message}`, true);
-            refreshUI();
+            const data = await loadCollection(uid, pwd);
+            currentUser = uid;
+            currentPass = pwd;
+            notes = data;
+            if (!notes.notes) notes.notes = {};
+            if (!notes.nextId) notes.nextId = 1;
+            authBadge.textContent = `🔓 Активно: ${uid}`;
+            const ids = Object.keys(notes.notes);
+            currentId = ids.length ? ids[0] : null;
+            if (currentId) loadNoteToEditor(currentId);
+            else { titleInp.value = ''; bodyTextarea.value = ''; viewerDiv.innerHTML = ''; }
+            renderList();
+            showMsg(`✅ Доступ открыт. Заметок: ${ids.length}`);
+        } catch(e) {
+            showMsg(`❌ Ошибка: ${e.message}`, true);
+            currentUser = null; currentPass = null;
+            authBadge.textContent = '🔒 Не авторизован';
+            renderList();
         }
     }
-
     function logout() {
-        currentUserId = null;
-        currentPassword = null;
-        notesData = { notes: {}, nextId: 1 };
-        currentNoteId = null;
-        userIdInput.value = '';
-        masterPassInput.value = '';
-        refreshUI();
-        showMessage('authInfoMsg', '🔓 Вы вышли из системы', false);
+        currentUser = null; currentPass = null;
+        notes = { notes: {}, nextId: 1 };
+        currentId = null;
+        userIdInp.value = ''; passInp.value = '';
+        titleInp.value = ''; bodyTextarea.value = ''; viewerDiv.innerHTML = '';
+        authBadge.textContent = '🔒 Не авторизован';
+        renderList();
+        showMsg('🔓 Вы вышли');
     }
-
-    async function exportAllBackup() {
-        if (!currentUserId || !currentPassword) { 
-            showMessage('authInfoMsg', '❌ Авторизуйтесь перед экспортом', true);
-            return; 
-        }
+    async function exportBackup() {
+        if (!currentUser) { showMsg('Авторизуйтесь', true); return; }
         try {
-            const currentNotes = await loadEncryptedNotesCollection(currentUserId, currentPassword);
-            const backupObject = {
-                version: "vc_notes_encrypted_v3",
-                userId: currentUserId,
-                encryptedData: await encryptData(currentNotes, currentPassword),
-                exportedAt: Date.now(),
-                hint: "Этот файл зашифрован. Для восстановления нужен тот же пароль."
-            };
-            const jsonStr = JSON.stringify(backupObject, null, 2);
-            const blob = new Blob([jsonStr], {type: "application/json"});
+            const data = await loadCollection(currentUser, currentPass);
+            const backup = { version: 'vc_notes_v4', userId: currentUser, encryptedData: await encryptData(data, currentPass), exportedAt: Date.now() };
+            const blob = new Blob([JSON.stringify(backup)], {type: 'application/json'});
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `vc_notes_${currentUserId}_${Date.now()}.backup.json`;
+            a.download = `vc_notes_${currentUser}.backup.json`;
             a.click();
             URL.revokeObjectURL(a.href);
-            showMessage('authInfoMsg', '✅ Бэкап создан и зашифрован!', false);
-        } catch(e) { 
-            showMessage('authInfoMsg', `❌ Ошибка экспорта: ${e.message}`, true);
-        }
+            showMsg('✅ Бэкап создан и зашифрован');
+        } catch(e) { showMsg(`❌ Ошибка: ${e.message}`, true); }
     }
-
     async function importBackup(file) {
         if (!file) return;
-        if (!currentUserId || !currentPassword) { 
-            showMessage('authInfoMsg', '❌ Авторизуйтесь перед импортом', true);
-            return; 
-        }
+        if (!currentUser) { showMsg('Авторизуйтесь', true); return; }
         try {
             const text = await file.text();
             const imported = JSON.parse(text);
-            if (imported.version !== "vc_notes_encrypted_v3") {
-                showMessage('authInfoMsg', '❌ Неподдерживаемый формат бэкапа', true);
-                return;
-            }
-            if (imported.userId !== currentUserId) {
-                showMessage('authInfoMsg', `❌ ID не совпадает (файл: ${imported.userId}, текущий: ${currentUserId})`, true);
-                return;
-            }
-            const decryptedNotes = await decryptData(imported.encryptedData, currentPassword);
-            if (!decryptedNotes || typeof decryptedNotes !== 'object') {
-                throw new Error('Неверная структура данных');
-            }
-            notesData = decryptedNotes;
-            if (!notesData.notes) notesData.notes = {};
-            if (!notesData.nextId) notesData.nextId = 1;
-            await saveEncryptedNotesCollection(currentUserId, currentPassword, { notes: notesData.notes, nextId: notesData.nextId });
-            await refreshUI();
-            const count = Object.keys(notesData.notes).length;
-            showMessage('authInfoMsg', `✅ Импорт успешен! Загружено ${count} заметок.`, false, 10000);
-            showStatusMessage('editorStatusMsg', '📥 Бэкап восстановлен', 3000);
-        } catch(e) { 
-            let errorMsg = e.message;
-            if (errorMsg.includes("Неверный пароль") || errorMsg.includes("decrypt")) {
-                errorMsg = "Неверный пароль для этого бэкапа";
-            }
-            showMessage('authInfoMsg', `❌ Ошибка импорта: ${errorMsg}`, true);
-        }
+            if (imported.version !== 'vc_notes_v4' || imported.userId !== currentUser) throw new Error('Неверный формат или ID');
+            const decrypted = await decryptData(imported.encryptedData, currentPass);
+            notes = decrypted;
+            if (!notes.notes) notes.notes = {};
+            if (!notes.nextId) notes.nextId = 1;
+            await saveCollection(currentUser, currentPass, notes);
+            const ids = Object.keys(notes.notes);
+            currentId = ids.length ? ids[0] : null;
+            if (currentId) loadNoteToEditor(currentId);
+            else { titleInp.value = ''; bodyTextarea.value = ''; viewerDiv.innerHTML = ''; }
+            renderList();
+            showMsg(`✅ Импорт: ${ids.length} заметок`);
+        } catch(e) { showMsg(`❌ Импорт: ${e.message}`, true); }
     }
 
-    function escapeHtml(str) { 
-        return String(str).replace(/[&<>]/g, function(m){ 
-            if(m==='&') return '&amp;'; 
-            if(m==='<') return '&lt;'; 
-            if(m==='>') return '&gt;'; 
-            return m;
-        }); 
-    }
+    function escapeHtml(str) { return String(str).replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 
-    // ========== ИНИЦИАЛИЗАЦИЯ ==========
-    authLoginBtn.addEventListener('click', login);
-    authLogoutBtn.addEventListener('click', logout);
-    createNewNoteBtn.addEventListener('click', createNewNote);
-    saveCurrentNoteBtn.addEventListener('click', saveCurrentNote);
-    deleteCurrentNoteBtn.addEventListener('click', deleteCurrentNote);
-    exportAllNotesBtn.addEventListener('click', exportAllBackup);
-    modeToggleBtn.addEventListener('click', toggleMode);
-    emojiTriggerBtn.addEventListener('click', showEmojiPicker);
-    
-    const importFileInput = document.createElement('input');
-    importFileInput.type = 'file';
-    importFileInput.accept = '.json';
-    importFileInput.style.display = 'none';
-    importFileInput.addEventListener('change', (e) => { 
-        if(e.target.files[0]) importBackup(e.target.files[0]); 
-        importFileInput.value = ''; 
-    });
-    document.body.appendChild(importFileInput);
-    importBackupBtn.onclick = () => importFileInput.click();
-    
-    // Начальное состояние - режим редактирования
-    noteBodyEditor.style.display = 'block';
-    noteViewer.style.display = 'none';
+    // ----- События -----
+    loginBtn.onclick = login;
+    logoutBtn.onclick = logout;
+    exportBtn.onclick = exportBackup;
+    importBtn.onclick = () => { const inp = document.createElement('input'); inp.type='file'; inp.accept='.json'; inp.onchange=e=>importBackup(e.target.files[0]); inp.click(); };
+    newNoteBtn.onclick = newNote;
+    saveBtn.onclick = saveCurrent;
+    deleteBtn.onclick = deleteCurrent;
+    emojiBtn.onclick = showPicker;
+    // Начальное состояние
+    bodyTextarea.style.display = 'block';
+    viewerDiv.style.display = 'none';
     isViewMode = false;
-
-    refreshUI();
+    modeBtn.textContent = '✏️ Режим редактирования';
+    renderList();
 </script>
 </body>
 </html>
